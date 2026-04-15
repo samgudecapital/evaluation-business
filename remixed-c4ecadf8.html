@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>System Evaluation — Clear Determinations</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink: #0d0d0b;
+    --paper: #f5f2ec;
+    --rule: #c8c0b0;
+    --accent: #b8341b;
+    --accent-soft: #e8d5cf;
+    --mid: #6b6355;
+    --mono: 'IBM Plex Mono', monospace;
+    --serif: 'Libre Baskerville', Georgia, serif;
+    --sans: 'IBM Plex Sans', sans-serif;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--serif);
+    font-size: 17px;
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  /* NOISE TEXTURE OVERLAY */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.6;
+  }
+
+  /* LAYOUT */
+  .container {
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 0 32px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* HEADER BAR */
+  header {
+    border-bottom: 1px solid var(--rule);
+    padding: 18px 0;
+    position: sticky;
+    top: 0;
+    background: var(--paper);
+    z-index: 100;
+  }
+
+  header .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .logo {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--mid);
+  }
+
+  .header-cta {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    text-decoration: none;
+    border-bottom: 1px solid var(--accent);
+    padding-bottom: 1px;
+    transition: opacity 0.2s;
+  }
+
+  .header-cta:hover { opacity: 0.65; }
+
+  /* SECTION SPACING */
+  section {
+    padding: 88px 0;
+    border-bottom: 1px solid var(--rule);
+    opacity: 0;
+    transform: translateY(28px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+
+  section.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* SECTION LABELS */
+  .label {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--mid);
+    margin-bottom: 36px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .label::after {
+    content: '';
+    display: block;
+    height: 1px;
+    width: 40px;
+    background: var(--rule);
+  }
+
+  /* HERO */
+  #hero {
+    padding: 120px 0 96px;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .hero-headline {
+    font-family: var(--serif);
+    font-size: clamp(36px, 5.5vw, 58px);
+    font-weight: 700;
+    line-height: 1.18;
+    letter-spacing: -0.02em;
+    max-width: 680px;
+    margin-bottom: 28px;
+  }
+
+  .hero-sub {
+    font-family: var(--sans);
+    font-size: 19px;
+    font-weight: 300;
+    color: var(--mid);
+    max-width: 520px;
+    line-height: 1.6;
+    margin-bottom: 48px;
+  }
+
+  .cta-group {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .btn-primary {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--paper);
+    background: var(--ink);
+    padding: 16px 36px;
+    text-decoration: none;
+    border: 1.5px solid var(--ink);
+    transition: background 0.2s, color 0.2s;
+    cursor: pointer;
+  }
+
+  .btn-primary:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .reinforcement {
+    font-family: var(--sans);
+    font-size: 13px;
+    font-style: italic;
+    color: var(--mid);
+    max-width: 400px;
+    line-height: 1.55;
+  }
+
+  /* PAIN SECTION */
+  .pain-list {
+    list-style: none;
+    margin: 0 0 40px;
+    border-top: 1px solid var(--rule);
+  }
+
+  .pain-list li {
+    font-family: var(--sans);
+    font-size: 17px;
+    font-weight: 400;
+    padding: 20px 0;
+    border-bottom: 1px solid var(--rule);
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    color: var(--ink);
+  }
+
+  .pain-list li::before {
+    content: '—';
+    font-family: var(--mono);
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+
+  .pain-close {
+    font-family: var(--serif);
+    font-size: 19px;
+    font-style: italic;
+    color: var(--mid);
+    max-width: 480px;
+    line-height: 1.6;
+    border-left: 3px solid var(--accent);
+    padding-left: 24px;
+    margin-top: 40px;
+  }
+
+  /* SECTION HEADERS */
+  .section-headline {
+    font-family: var(--serif);
+    font-size: clamp(26px, 3.5vw, 38px);
+    font-weight: 700;
+    line-height: 1.25;
+    letter-spacing: -0.015em;
+    max-width: 600px;
+    margin-bottom: 28px;
+  }
+
+  .section-body {
+    font-family: var(--sans);
+    font-size: 17px;
+    font-weight: 300;
+    color: var(--mid);
+    max-width: 520px;
+    line-height: 1.7;
+  }
+
+  /* REFRAME */
+  .reframe-pull {
+    font-family: var(--serif);
+    font-size: clamp(28px, 4vw, 44px);
+    font-style: italic;
+    font-weight: 400;
+    line-height: 1.3;
+    max-width: 560px;
+    margin-bottom: 24px;
+    color: var(--ink);
+  }
+
+  /* WHAT WE DO */
+  .do-list {
+    list-style: none;
+    margin: 28px 0 40px;
+    display: grid;
+    gap: 0;
+  }
+
+  .do-list li {
+    font-family: var(--sans);
+    font-size: 16px;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--rule);
+    display: flex;
+    gap: 16px;
+    align-items: baseline;
+    color: var(--ink);
+  }
+
+  .do-list li::before {
+    content: counter(item, decimal-leading-zero);
+    counter-increment: item;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+
+  .do-list { counter-reset: item; }
+
+  /* OUTCOME BOX */
+  .outcome-box {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 40px 40px;
+    margin-top: 48px;
+  }
+
+  .outcome-box p {
+    font-family: var(--mono);
+    font-size: 13px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--rule);
+    margin-bottom: 20px;
+  }
+
+  .outcome-items {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .outcome-items li {
+    font-family: var(--serif);
+    font-size: 19px;
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+  }
+
+  .outcome-items li .verdict {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    padding: 3px 10px;
+    flex-shrink: 0;
+  }
+
+  .verdict.yes { background: #2a6b3a; color: #b8f0c4; }
+  .verdict.no { background: #6b2020; color: #f0b8b8; }
+
+  /* WHO THIS IS FOR */
+  .who-list {
+    list-style: none;
+    margin: 0;
+    border-top: 1px solid var(--rule);
+  }
+
+  .who-list li {
+    font-family: var(--sans);
+    font-size: 17px;
+    padding: 22px 0;
+    border-bottom: 1px solid var(--rule);
+    display: flex;
+    gap: 20px;
+    align-items: baseline;
+  }
+
+  .who-list li::before {
+    content: '✓';
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+
+  /* WHAT WE EVALUATE */
+  .eval-intro {
+    font-family: var(--sans);
+    font-size: 17px;
+    font-weight: 300;
+    color: var(--mid);
+    max-width: 540px;
+    line-height: 1.65;
+    margin-bottom: 44px;
+  }
+
+  .keyword-cloud {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin: 0 0 36px;
+  }
+
+  .kw {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.05em;
+    color: var(--mid);
+    border: 1px solid var(--rule);
+    padding: 4px 8px;
+    background: var(--paper);
+    transition: border-color 0.15s, color 0.15s;
+    cursor: default;
+  }
+
+  .kw:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .eval-close {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 17px;
+    color: var(--mid);
+    border-left: 3px solid var(--rule);
+    padding-left: 24px;
+    margin-top: 32px;
+  }
+
+  /* PROCESS */
+  .process-steps {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    margin-top: 40px;
+  }
+
+  .step {
+    background: var(--paper);
+    padding: 36px 28px;
+  }
+
+  .step-num {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 18px;
+  }
+
+  .step-title {
+    font-family: var(--serif);
+    font-weight: 700;
+    font-size: 18px;
+    margin-bottom: 10px;
+  }
+
+  .step-body {
+    font-family: var(--sans);
+    font-size: 14px;
+    font-weight: 300;
+    color: var(--mid);
+    line-height: 1.6;
+  }
+
+  /* AUTHORITY */
+  .when-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    margin: 36px 0;
+  }
+
+  .when-cell {
+    background: var(--paper);
+    padding: 28px;
+  }
+
+  .when-cell .condition {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--mid);
+    margin-bottom: 8px;
+  }
+
+  .when-cell .desc {
+    font-family: var(--serif);
+    font-size: 17px;
+    font-style: italic;
+    color: var(--ink);
+    line-height: 1.4;
+  }
+
+  .authority-close {
+    font-family: var(--serif);
+    font-size: 20px;
+    font-style: italic;
+    color: var(--mid);
+    max-width: 440px;
+    margin-top: 36px;
+    line-height: 1.55;
+  }
+
+  /* CTA SECTION */
+  #cta-mid, #cta-final { background: var(--paper); }
+
+  .cta-section-headline {
+    font-family: var(--serif);
+    font-size: clamp(30px, 4vw, 46px);
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    max-width: 600px;
+    margin-bottom: 40px;
+  }
+
+  /* FINAL CLOSE */
+  #final-close {
+    padding: 100px 0 120px;
+    border-bottom: none;
+  }
+
+  .final-copy {
+    font-family: var(--serif);
+    font-size: clamp(22px, 3vw, 32px);
+    line-height: 1.45;
+    max-width: 500px;
+    margin-bottom: 16px;
+    color: var(--mid);
+    font-weight: 400;
+  }
+
+  .final-question {
+    font-family: var(--serif);
+    font-size: clamp(26px, 3.8vw, 40px);
+    font-weight: 700;
+    line-height: 1.25;
+    max-width: 520px;
+    margin-bottom: 52px;
+    color: var(--ink);
+  }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid var(--rule);
+    padding: 28px 0;
+    position: relative;
+    z-index: 1;
+  }
+
+  footer .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .footer-note {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--mid);
+  }
+
+  /* DIVIDER */
+  .divider {
+    border: none;
+    border-top: 1px solid var(--rule);
+    margin: 48px 0;
+  }
+
+  /* RESPONSIVE */
+  @media (max-width: 640px) {
+    .container { padding: 0 20px; }
+    section { padding: 64px 0; }
+    #hero { padding: 80px 0 64px; }
+    .process-steps { grid-template-columns: 1fr; }
+    .eval-grid { grid-template-columns: 1fr; }
+    .when-grid { grid-template-columns: 1fr; }
+    .outcome-box { padding: 28px 24px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="container">
+    <span class="logo">System Evaluation</span>
+    <a href="#submit" class="header-cta">Submit Your System</a>
+  </div>
+</header>
+
+<!-- HERO -->
+<section id="hero" class="visible">
+  <div class="container">
+    <div class="label">01 — Determination</div>
+    <h1 class="hero-headline">If your system can't get approved, nothing moves forward.</h1>
+    <p class="hero-sub">We evaluate engineered systems and tell you exactly whether they can be used — and under what conditions.</p>
+    <div class="cta-group">
+      <a href="#submit" class="btn-primary">Submit Your System for Evaluation</a>
+      <p class="reinforcement">Most delays aren't because something is wrong — they happen because no one has clearly defined what needs to be proven.</p>
+    </div>
+  </div>
+</section>
+
+<!-- PAIN -->
+<section id="pain">
+  <div class="container">
+    <div class="label">02 — The Problem</div>
+    <h2 class="section-headline">This is where projects get stuck:</h2>
+    <ul class="pain-list">
+      <li>You built something — but no one will approve it</li>
+      <li>It doesn't clearly fit code or standard practice</li>
+      <li>Reviewers keep asking for more justification</li>
+      <li>Engineers won't take full responsibility</li>
+      <li>You're stuck in back-and-forth with no clear answer</li>
+    </ul>
+    <div class="pain-close">
+      The real problem is simple: no one has clearly defined whether it's acceptable — or not.
+    </div>
+  </div>
+</section>
+
+<!-- REFRAME -->
+<section id="reframe">
+  <div class="container">
+    <div class="label">03 — The Reframe</div>
+    <p class="reframe-pull">You don't need more opinions. You need a clear decision.</p>
+    <p class="section-body">At some point, someone has to answer: <em>"Does this meet requirements?"</em><br><br>That's what we do.</p>
+  </div>
+</section>
+
+<!-- WHAT WE DO -->
+<section id="what">
+  <div class="container">
+    <div class="label">04 — What We Do</div>
+    <h2 class="section-headline">We evaluate and determine whether your system can be used.</h2>
+    <ol class="do-list">
+      <li>Define what needs to be proven</li>
+      <li>Evaluate the system against real performance requirements</li>
+      <li>Identify risks and failure modes</li>
+      <li>Issue a structured determination</li>
+    </ol>
+
+    <div class="outcome-box">
+      <p>You get a clear answer</p>
+      <ul class="outcome-items">
+        <li><span class="verdict yes">YES</span> It works — under defined conditions</li>
+        <li><span class="verdict no">NO</span> It doesn't — and here's exactly why</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- WHO -->
+<section id="who">
+  <div class="container">
+    <div class="label">05 — Who This Is For</div>
+    <h2 class="section-headline">This is for you if:</h2>
+    <ul class="who-list">
+      <li>You built a product or system that's hard to approve</li>
+      <li>You're using something non-standard in a project</li>
+      <li>You're getting pushback from reviewers or AHJs</li>
+      <li>You need a clear basis to move forward</li>
+      <li>You're tired of going in circles</li>
+    </ul>
+  </div>
+</section>
+
+<!-- WHAT WE EVALUATE -->
+<section id="systems">
+  <div class="container">
+    <div class="label">06 — Systems We Evaluate</div>
+    <h2 class="section-headline">If you're not sure what to call it, that's fine.</h2>
+    <p class="eval-intro">You don't need to know whether it's a system, an assembly, or a component. You don't need to know whether it's prefabricated, modular, or custom. If any of these words match what you're dealing with, you're in the right place.</p>
+    <div class="keyword-cloud">
+      <span class="kw">modular system</span>
+      <span class="kw">custom connection</span>
+      <span class="kw">prototype</span>
+      <span class="kw">prefabricated assembly</span>
+      <span class="kw">new material</span>
+      <span class="kw">hybrid construction</span>
+      <span class="kw">multi-trade interface</span>
+      <span class="kw">packaged equipment</span>
+      <span class="kw">combined services</span>
+      <span class="kw">factory-built assembly</span>
+      <span class="kw">atypical detail</span>
+      <span class="kw">engineered product</span>
+      <span class="kw">proprietary anchor</span>
+      <span class="kw">unlisted assembly</span>
+      <span class="kw">novel variant</span>
+      <span class="kw">integrated assembly</span>
+      <span class="kw">multi-trade system</span>
+      <span class="kw">alternative method</span>
+      <span class="kw">non-standard condition</span>
+      <span class="kw">untested system</span>
+      <span class="kw">anything that doesn't fit code</span>
+    </div>
+    <p class="eval-close">If it doesn't fit neatly into standard rules — that's exactly where we step in.</p>
+  </div>
+</section>
+
+<!-- PROCESS -->
+<section id="process">
+  <div class="container">
+    <div class="label">07 — How It Works</div>
+    <h2 class="section-headline">Three steps. One clear answer.</h2>
+    <div class="process-steps">
+      <div class="step">
+        <div class="step-num">Step 01</div>
+        <div class="step-title">Submit your system</div>
+        <div class="step-body">Send drawings, details, or information about your system</div>
+      </div>
+      <div class="step">
+        <div class="step-num">Step 02</div>
+        <div class="step-title">We evaluate it</div>
+        <div class="step-body">We define the criteria and assess performance against requirements</div>
+      </div>
+      <div class="step">
+        <div class="step-num">Step 03</div>
+        <div class="step-title">You get a determination</div>
+        <div class="step-body">Clear answer plus conditions for use — in writing</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- AUTHORITY -->
+<section id="authority">
+  <div class="container">
+    <div class="label">08 — Where We're Most Useful</div>
+    <h2 class="section-headline">When the answer isn't obvious to anyone.</h2>
+    <div class="when-grid">
+      <div class="when-cell">
+        <div class="condition">Situation</div>
+        <div class="desc">No one knows what's required</div>
+      </div>
+      <div class="when-cell">
+        <div class="condition">Situation</div>
+        <div class="desc">Different parties disagree</div>
+      </div>
+      <div class="when-cell">
+        <div class="condition">Situation</div>
+        <div class="desc">Approval is uncertain</div>
+      </div>
+      <div class="when-cell">
+        <div class="condition">Situation</div>
+        <div class="desc">Risk is high and stakes are real</div>
+      </div>
+    </div>
+    <p class="authority-close">In these situations, someone has to define the decision.<br>That's where we come in.</p>
+  </div>
+</section>
+
+<!-- CTA MID -->
+<section id="cta-mid">
+  <div class="container">
+    <div class="label">09 — Move Forward</div>
+    <h2 class="cta-section-headline">Get a clear answer and move forward.</h2>
+    <a href="#submit" class="btn-primary">Submit Your System for Evaluation</a>
+  </div>
+</section>
+
+<!-- FINAL CLOSE -->
+<section id="final-close">
+  <div class="container">
+    <div class="label">10 — The Decision</div>
+    <p class="final-copy">You don't need more back-and-forth.<br>You don't need more opinions.</p>
+    <p class="final-question">You need to know: can this be used — or not?</p>
+    <a href="#submit" class="btn-primary" id="submit">Submit Your System</a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <span class="footer-note">System Evaluation Services</span>
+    <span class="footer-note">Clear Determinations for Non-Standard Conditions</span>
+  </div>
+</footer>
+
+<script>
+  // Scroll-triggered section reveals
+  const sections = document.querySelectorAll('section:not(#hero)');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        observer.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.1, rootMargin: '0px 0px -60px 0px' });
+
+  sections.forEach(s => observer.observe(s));
+
+  // Smooth CTA scroll
+  document.querySelectorAll('a[href="#submit"]').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.preventDefault();
+      document.getElementById('submit').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+  });
+</script>
+</body>
+</html>
